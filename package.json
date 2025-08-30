@@ -2,7 +2,7 @@
   "name": "zipx-cli",
   "type": "module",
   "version": "0.0.0",
-  "packageManager": "pnpm@10.6.2",
+  "packageManager": "pnpm@10.15.0",
   "description": "zipx",
   "author": "hackycy",
   "license": "MIT",
@@ -21,7 +21,11 @@
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
+  "bin": {
+    "zipx": "bin/zipx.mjs"
+  },
   "files": [
+    "bin",
     "dist"
   ],
   "scripts": {
