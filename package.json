@@ -39,6 +39,12 @@
     "typecheck": "tsc --noEmit",
     "prepare": "simple-git-hooks"
   },
+  "dependencies": {
+    "c12": "catalog:cli",
+    "cac": "catalog:cli",
+    "jszip": "catalog:cli",
+    "tinyglobby": "catalog:cli"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:cli",
     "@antfu/ni": "catalog:cli",
