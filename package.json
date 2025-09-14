@@ -43,6 +43,7 @@
     "c12": "catalog:cli",
     "cac": "catalog:cli",
     "jszip": "catalog:cli",
+    "ora": "catalog:cli",
     "tinyglobby": "catalog:cli"
   },
   "devDependencies": {

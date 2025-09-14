@@ -11,6 +11,7 @@ catalogs:
     eslint: ^9.22.0
     jszip: ^3.10.1
     lint-staged: ^15.5.0
+    ora: ^8.2.0
     simple-git-hooks: ^2.11.1
     tinyglobby: ^0.2.14
     tsx: ^4.19.3

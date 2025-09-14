@@ -64,8 +64,4 @@ export async function compress(options: ZipxOptions): Promise<void> {
   })
 
   await fs.writeFile(outputPath, content)
-
-  // Simple feedback
-  // eslint-disable-next-line no-console
-  console.log(`Created ${path.relative(cwd, outputPath)} (${entries.length} files)`) // keep concise, CLI friendly
 }
