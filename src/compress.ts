@@ -55,10 +55,12 @@ export async function compress(options: ZipxOptions): Promise<void> {
   // Ensure output directory exists
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
 
+  const compression = !options.compressionLevel ? 'STORE' : 'DEFLATE'
+
   const content = await zip.generateAsync({
     type: 'nodebuffer',
-    compression: 'DEFLATE',
-    compressionOptions: { level: 9 },
+    compression,
+    compressionOptions: compression === 'DEFLATE' ? { level: options.compressionLevel! } : undefined,
   })
 
   await fs.writeFile(outputPath, content)

@@ -5,6 +5,7 @@ import { loadConfig } from 'c12'
 export const defaulZipxOptions: ZipxOptions = {
   target: 'dist',
   output: 'archive',
+  compressionLevel: 9,
 }
 
 export async function loadZipxConfig(overrides?: Partial<ZipxOptions>, cwd = process.cwd()): Promise<ZipxOptions> {
