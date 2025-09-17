@@ -1,9 +1,11 @@
 import process from 'node:process'
+import ora from 'ora'
 import { NonZeroExitError } from 'tinyexec'
 import { compress } from './compress'
 import { parseArgs } from './parse-args'
 
 export async function bootstrap(): Promise<void> {
+  const spinner = ora('✨ Compressing...').start()
   try {
     // Setup global error handlers
     process.on('uncaughtException', errorHandler)
@@ -11,8 +13,10 @@ export async function bootstrap(): Promise<void> {
 
     const args = await parseArgs()
     await compress(args)
+    spinner.succeed('✅ Compression complete')
   }
   catch (error) {
+    spinner.fail('❌ Compression failed')
     errorHandler(error as Error)
   }
 }
