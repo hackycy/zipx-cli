@@ -41,7 +41,8 @@ zipx [options]
 
 | 选项 | 别名 | 默认值 | 说明 |
 |------|------|--------|------|
-| `--target <dir>` | `-t` | `dist` | 要压缩的目录 |
+| `--target <dir>` | `-t` | `dist` | 要压缩的目录；可重复或用逗号分隔以指定多个目录（会一起打包） |
+| `--no-namespace` |  | `false` | 多目录时不加前缀（默认会加前缀：按目录相对 cwd 的路径），可能造成同名文件覆盖 |
 | `--output <file>` | `-o` | `archive` | 输出文件名（可不带 .zip） |
 | `--include <patterns...>` | `-i` | `**/*` | 仅包含的 Glob 模式 |
 | `--exclude <patterns...>` | `-e` | `-` | 需要排除的 Glob 模式 |
@@ -55,6 +56,15 @@ zipx
 
 # 指定目录与输出名
 zipx -t build -o release
+
+# 多目录一起打包
+# 重复传参
+zipx -t dist -t public -o release
+# 逗号分隔
+zipx -t dist,public -o release
+
+# 多目录但不加前缀（平铺合并）
+zipx -t dist,public --no-namespace -o release
 
 # 只包含 js 与 map
 zipx -i "**/*.js" "**/*.js.map"
@@ -76,10 +86,19 @@ zipx -t dist -o artifacts/app -i "**/*" -e "**/*.log" "**/*.md"
 import { defineConfig } from 'zipx-cli'
 
 export default defineConfig({
+  // 单目录
   target: 'dist',
   output: 'artifacts/app',
   include: ['**/*'],
   exclude: ['**/*.log', '**/*.map'],
+})
+
+// 或：多目录
+export default defineConfig({
+  target: ['dist', 'public'],
+  output: 'artifacts/app',
+  // 关闭命名空间（默认 true）
+  namespace: false,
 })
 ```
 
@@ -91,10 +110,19 @@ export default defineConfig({
 import { compress } from 'zipx-cli'
 
 await compress({
+  // 单目录
   target: 'dist',
   output: 'release', // 生成 release.zip
   include: ['**/*.js'],
   exclude: ['**/*.test.js'],
+})
+
+// 多目录
+await compress({
+  target: ['dist', 'public'],
+  output: 'release',
+  // 关闭命名空间（默认 true）
+  namespace: false,
 })
 ```
 
@@ -103,10 +131,11 @@ await compress({
 ```ts
 interface ZipxOptions {
   cwd?: string
-  target?: string // 默认: dist
+  target?: string | string[] // 默认: dist；数组则代表多个目录一起压缩
   output?: string // 默认: archive （若无 .zip 自动补全）
   include?: string[] // 默认: ['**/*']
   exclude?: string[]
+  namespace?: boolean // 多目录时是否加前缀，默认 true；false 则平铺合并（可能覆盖同名文件）
 }
 ```
 

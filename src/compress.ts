@@ -17,13 +17,19 @@ import { glob } from 'tinyglobby'
  */
 export async function compress(options: ZipxOptions): Promise<void> {
   const cwd = options.cwd ? path.resolve(options.cwd) : process.cwd()
-  const targetDir = path.resolve(cwd, options.target || 'dist')
   const outputBase = options.output || 'archive'
   const outputPath = path.resolve(cwd, outputBase.endsWith('.zip') ? outputBase : `${outputBase}.zip`)
 
-  // Validate target directory
-  if (!fssync.existsSync(targetDir) || !fssync.statSync(targetDir).isDirectory())
-    throw new Error(`Target directory not found: ${targetDir}`)
+  // Normalize targets
+  const targets = (Array.isArray(options.target) ? options.target : [options.target || 'dist'])
+    .filter(Boolean) as string[]
+
+  // Validate that each target exists and is a directory
+  const absTargets = targets.map(t => path.resolve(cwd, t))
+  for (const abs of absTargets) {
+    if (!fssync.existsSync(abs) || !fssync.statSync(abs).isDirectory())
+      throw new Error(`Target directory not found: ${abs}`)
+  }
 
   // Build glob patterns
   const includePatterns = (options.include && options.include.length > 0)
@@ -31,25 +37,40 @@ export async function compress(options: ZipxOptions): Promise<void> {
     : ['**/*']
   const excludePatterns = options.exclude || []
 
-  // Collect files (only files, no directories)
-  const entries = await glob(includePatterns, {
-    cwd: targetDir,
-    dot: true, // include dotfiles unless explicitly excluded
-    ignore: excludePatterns,
-    onlyFiles: true,
-    followSymbolicLinks: true,
-  })
-
   const zip = new JSZip()
 
-  for (const rel of entries) {
-    const abs = path.join(targetDir, rel)
-    // Skip if for some reason it's a directory (defensive)
-    const stat = await fs.stat(abs)
-    if (!stat.isFile())
-      continue
-    const data = await fs.readFile(abs)
-    zip.file(rel, data, { date: stat.mtime })
+  // If multiple targets, we namespace files under their relative path to cwd
+  // (or basename if outside cwd) to avoid collisions.
+  const doNamespace = options.namespace !== false && absTargets.length > 1
+
+  for (let i = 0; i < absTargets.length; i++) {
+    const targetDir = absTargets[i]
+
+    const relFromCwd = path.relative(cwd, targetDir)
+    const namespace = doNamespace
+      ? (relFromCwd && !relFromCwd.startsWith('..') && !path.isAbsolute(relFromCwd))
+          ? relFromCwd
+          : path.basename(targetDir)
+      : ''
+
+    // Collect files (only files, no directories) for this target
+    const entries = await glob(includePatterns, {
+      cwd: targetDir,
+      dot: true, // include dotfiles unless explicitly excluded
+      ignore: excludePatterns,
+      onlyFiles: true,
+      followSymbolicLinks: true,
+    })
+
+    for (const rel of entries) {
+      const abs = path.join(targetDir, rel)
+      const stat = await fs.stat(abs)
+      if (!stat.isFile())
+        continue
+      const data = await fs.readFile(abs)
+      const archivePath = namespace ? path.join(namespace, rel) : rel
+      zip.file(archivePath, data, { date: stat.mtime })
+    }
   }
 
   // Ensure output directory exists
